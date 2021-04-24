@@ -90,6 +90,10 @@ make_issue_metrics <- function(issue_body, type, identifer) {
 #' @inheritParams rcrossref::cr_cn
 #' @param ... path to [rcrossref::cr_cn][rcrossref::cr_cn]
 #' @rdname make_issue_body
+#' @examples
+#' \dontrun{
+#' make_issue_body("DOI: 10.1016/j.tourman.2019.104010")
+#' }
 #' @export
 make_issue_body <- function(x, style = "oikos", ...) {
   paper_type <-
@@ -115,7 +119,7 @@ make_issue_body <- function(x, style = "oikos", ...) {
                        ...) %>%
       rcrossref:::parse_bibtex()
   }
-  if (is.null(target_article)) {
+  if (is.null(target_article_parsed)) {
     NULL
   } else {
     make_issue_info(target_article_parsed, type = paper_type) %>%

@@ -18,3 +18,8 @@ you'll get a  \verb{(500) Internal Server Error}}
 \description{
 Make GitHub issue's body contents
 }
+\examples{
+\dontrun{
+make_issue_body("DOI: 10.1016/j.tourman.2019.104010")
+}
+}

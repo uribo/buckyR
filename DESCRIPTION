@@ -20,4 +20,6 @@ Imports:
   rAltmetric,
   rcrossref,
   rlang
+Suggests:
+  bibtex
 Roxygen: list(markdown = TRUE)
