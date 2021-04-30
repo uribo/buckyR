@@ -165,14 +165,14 @@ make_issue_body <- function(x, style = "oikos", ...) {
 #' @inheritParams create_issue_template
 #' @import rlang
 #' @export
-article_info <- function(x, user, repo, number, labels = NULL, ...) {
+article_info <- function(x, user, repo, number, labels = NULL) {
   if (!is.null(labels)) {
     current_labels <- labels
   } else {
     current_labels <- c(`papers` = "papers")
   }
   gen_body <-
-    make_issue_body(x = x, ...)
+    make_issue_body(x = x)
   # Modified issue title and assigned label ---------------------------------
   issue_labels <-
     purrr::list_modify(gen_body$labels,
