@@ -187,5 +187,10 @@ article_info <- function(x, user, repo, number, labels = NULL, ...) {
          number = number,
          title = gen_body$title,
          labels = gen_body$labels)
+  gh::gh("POST /repos/:owner/:repo/issues/:number/comments",
+         owner = user,
+         repo = repo,
+         number = number,
+         body = gen_body$body)
 
 }
