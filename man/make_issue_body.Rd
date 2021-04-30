@@ -21,5 +21,6 @@ Make GitHub issue's body contents
 \examples{
 \dontrun{
 make_issue_body("DOI: 10.1016/j.tourman.2019.104010")
+make_issue_body("arXiv: 2104.07605")
 }
 }

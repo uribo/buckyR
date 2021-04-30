@@ -84,7 +84,6 @@ make_issue_metrics <- function(issue_body, type, identifer) {
       url = res_altm$url))
 }
 
-
 #' Make GitHub issue's body contents
 #' @param x GitHub issue title
 #' @inheritParams rcrossref::cr_cn
@@ -93,6 +92,7 @@ make_issue_metrics <- function(issue_body, type, identifer) {
 #' @examples
 #' \dontrun{
 #' make_issue_body("DOI: 10.1016/j.tourman.2019.104010")
+#' make_issue_body("arXiv: 2104.07605")
 #' }
 #' @export
 make_issue_body <- function(x, style = "oikos", ...) {
@@ -110,6 +110,7 @@ make_issue_body <- function(x, style = "oikos", ...) {
            title = target_article$title,
            url = target_article$link_abstract,
            submitted = target_article$submitted,
+           year = substr(target_article$submitted, 1, 4),
            updated = target_article$updated,
            abstract = target_article$abstract)
   } else if (paper_type == "DOI") {
@@ -120,10 +121,71 @@ make_issue_body <- function(x, style = "oikos", ...) {
       rcrossref:::parse_bibtex()
   }
   if (is.null(target_article_parsed)) {
-    NULL
+    list(title = NULL,
+         labels = NULL,
+         body = NULL)
   } else {
-    make_issue_info(target_article_parsed, type = paper_type) %>%
+    if (paper_type == "arxiv") {
+      issue_labels <-
+        list(paste("Journal:", "arXiv"),
+             paste("Published year:", target_article_parsed$year),
+             paste("Category:", target_article$primary_category))
+    } else if (paper_type == "DOI") {
+      issue_labels <-
+        list(paste("Journal:", abbr_journal_name(target_article_parsed$journal)),
+             paste("Published year:", target_article_parsed$year),
+             paste("Type:", target_article_parsed$entry))
+    }
+    issue_title <-
+      paste(
+        paste(
+          gsub(pattern = "[[:space:]].+", "", target_article_parsed$author),
+          target_article_parsed$year,
+          sep = "_"
+        ),
+        target_article_parsed$title,
+        sep = ": ")
+    issue_body <-
+      make_issue_info(target_article_parsed, type = paper_type) %>%
       make_issue_metrics(type = paper_type,
                          identifer = paper_identifer)
+    list(title = issue_title,
+         labels = issue_labels,
+         body = issue_body)
   }
+}
+
+# current_labels <-
+#   event_json$issue$labels$name
+
+#' Update article information
+#' @param x x
+#' @param number issue number
+#' @param labels issue labels
+#' @inheritParams create_issue_template
+#' @import rlang
+#' @export
+article_info <- function(x, user, repo, number, labels = NULL, ...) {
+  if (!is.null(labels)) {
+    current_labels <- labels
+  } else {
+    current_labels <- c(`papers` = "papers")
+  }
+  gen_body <-
+    make_issue_body(x = x, ...)
+  # Modified issue title and assigned label ---------------------------------
+  issue_labels <-
+    purrr::list_modify(gen_body$labels,
+                       !!!as.list(current_labels) %>%
+                         purrr::set_names(current_labels)) %>%
+    purrr::set_names(NULL) %>%
+    purrr::keep(~ nchar(.x) <= 50)
+
+  gh::gh("PATCH /repos/:owner/:repo/issues/:number",
+         owner = user,
+         repo = repo,
+         number = number,
+         title = gen_body$title,
+         labels = gen_body$labels)
+
 }

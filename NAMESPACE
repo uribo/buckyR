@@ -2,6 +2,7 @@
 
 export("%>%")
 export(abbr_journal_name)
+export(article_info)
 export(create_issue_template)
 export(make_issue_body)
 import(rlang)
