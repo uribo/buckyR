@@ -4,7 +4,7 @@
 \alias{article_info}
 \title{Update article information}
 \usage{
-article_info(x, user, repo, number, labels = NULL, ...)
+article_info(x, user, repo, number, labels = NULL)
 }
 \arguments{
 \item{x}{x}

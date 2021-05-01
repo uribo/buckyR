@@ -155,8 +155,22 @@ make_issue_body <- function(x, style = "oikos", ...) {
   }
 }
 
-# current_labels <-
-#   event_json$issue$labels$name
+check_duplicate <- function(x, issue_list, close = FALSE, user, repo, number) {
+  title <- NULL
+  duplicate_num <-
+    subset(issue_list, title == x) %>%
+    purrr::pluck("number")
+  if (rlang::is_false(is.null(duplicate_num)) & rlang::is_true(close)) {
+    gh::gh("PATCH /repos/:owner/:repo/issues/:number",
+           owner = user,
+           repo = repo,
+           number = number,
+           body = glue::glue("Duplicate #{duplicate_num}"),
+           labels = list("duplicate"),
+           state = "closed")
+  }
+  duplicate_num
+}
 
 #' Update article information
 #' @param x x
@@ -173,6 +187,16 @@ article_info <- function(x, user, repo, number, labels = NULL) {
   }
   gen_body <-
     make_issue_body(x = x)
+  # Check duplicate ---------------------------------------------------------
+  duplicate_num <-
+    check_duplicate(x = gen_body$title,
+                    issue_list = list_up_issues(user, repo),
+                    user = user,
+                    repo = repo,
+                    number = number)
+  # Added article information -----------------------------------------------
+  if (!is.null(gen_body$body) & is.null(duplicate_num)) {
+
   # Modified issue title and assigned label ---------------------------------
   issue_labels <-
     purrr::list_modify(gen_body$labels,
@@ -186,11 +210,11 @@ article_info <- function(x, user, repo, number, labels = NULL) {
          repo = repo,
          number = number,
          title = gen_body$title,
-         labels = gen_body$labels)
+         labels = issue_labels)
   gh::gh("POST /repos/:owner/:repo/issues/:number/comments",
          owner = user,
          repo = repo,
          number = number,
          body = gen_body$body)
-
+  }
 }
