@@ -193,7 +193,8 @@ article_info <- function(x, user, repo, number, labels = NULL) {
                     issue_list = list_up_issues(user, repo),
                     user = user,
                     repo = repo,
-                    number = number)
+                    number = number,
+                    close = TRUE)
   # Added article information -----------------------------------------------
   if (!is.null(gen_body$body) & is.null(duplicate_num)) {
 
