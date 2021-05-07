@@ -43,45 +43,56 @@ identific_altmetrics <- function(type = NULL, identifer = NULL) {
     list(doi = ifelse(type == "DOI", identifer, NA),
          arxiv = ifelse(type == "arxiv", identifer, NA)) %>%
     purrr::keep(~ !is.na(.x))
+  safaly_altmetrics <-
+    purrr::safely(
+      rAltmetric::altmetrics)
   res_altm <-
-    rlang::exec(rAltmetric::altmetrics, !!!args)
-  df_res_altm <-
-    rAltmetric::altmetric_data(res_altm)
-  vars_altm <-
-    names(df_res_altm)[names(df_res_altm) %in% c(
-      "cited_by_posts_count",
-      "cited_by_tweeters_count",
-      "cited_by_accounts_count",
-      "score",
-      "last_updated")]
-  df_res_altm <-
-    df_res_altm[, vars_altm]
-  df_res_altm$last_updated <-
-    as.POSIXct(as.numeric(df_res_altm$last_updated),
-               origin = "1970-01-01 00:00:00",
-               tz = "UTC")
-  altmetric_score <-
-    df_res_altm %>%
-    knitr::kable() %>%
-    as.character() %>%
-    paste(collapse = "\n")
-  altmetric_url <-
-    res_altm$details_url
-  list(score = altmetric_score, url = altmetric_url)
+    rlang::exec(safaly_altmetrics, !!!args)
+  if (is.null(res_altm$error)) {
+    df_res_altm <-
+      rAltmetric::altmetric_data(res_altm$result)
+    vars_altm <-
+      names(df_res_altm)[names(df_res_altm) %in% c(
+        "cited_by_posts_count",
+        "cited_by_tweeters_count",
+        "cited_by_accounts_count",
+        "score",
+        "last_updated")]
+    df_res_altm <-
+      df_res_altm[, vars_altm]
+    df_res_altm$last_updated <-
+      as.POSIXct(as.numeric(df_res_altm$last_updated),
+                 origin = "1970-01-01 00:00:00",
+                 tz = "UTC")
+    altmetric_score <-
+      df_res_altm %>%
+      knitr::kable() %>%
+      as.character() %>%
+      paste(collapse = "\n")
+    altmetric_url <-
+      res_altm$result$details_url
+    list(score = altmetric_score, url = altmetric_url)
+  } else {
+    NULL
+  }
 }
 
 make_issue_metrics <- function(issue_body, type, identifer) {
   res_altm <-
     identific_altmetrics(type = type, identifer = identifer)
-  glue::glue(
-    issue_body,
-    "\n\n",
+  if (is.null(res_altm)) {
+    issue_body
+  } else {
     glue::glue(
-      '### Article metrics\n
+      issue_body,
+      "\n\n",
+      glue::glue(
+        '### Article metrics\n
     {score}\n
     {url}',
-      score = res_altm$score,
-      url = res_altm$url))
+        score = res_altm$score,
+        url = res_altm$url))
+  }
 }
 
 #' Make GitHub issue's body contents
