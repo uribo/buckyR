@@ -83,15 +83,15 @@ make_issue_metrics <- function(issue_body, type, identifer) {
   if (is.null(res_altm)) {
     issue_body
   } else {
-    glue::glue(
-      issue_body,
-      "\n\n",
-      glue::glue(
-        '### Article metrics\n
+      paste0(
+        issue_body,
+        "\n\n",
+        glue::glue(
+          '### Article metrics\n
     {score}\n
     {url}',
-        score = res_altm$score,
-        url = res_altm$url))
+          score = res_altm$score,
+          url = res_altm$url))
   }
 }
 
